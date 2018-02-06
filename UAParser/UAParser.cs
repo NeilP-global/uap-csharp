@@ -438,19 +438,19 @@ namespace UAParser
                      ? Select(s => s != null ? replacement.ReplaceFirstOccurence(token, s) : replacement)
                      : Replace(replacement);
             }
-            
+
+            static Func<string, string, string, string> ReplaceFunction = (string replacementString, string matchedGroup, string token) =>
+            {
+                return matchedGroup != null
+                    ? replacementString.ReplaceFirstOccurence(token, matchedGroup)
+                    : replacementString;
+            };
+
             static Func<Match, IEnumerator<int>, string> ReplaceOS(
                 string replacement, string token)
             {
                 if (replacement == null || !replacement.Contains(token))
                     return Replace(replacement);
-
-                string ReplaceFunction(string replacementString, string matchedGroup)
-                {
-                    return matchedGroup != null
-                        ? replacementString.ReplaceFirstOccurence(token, matchedGroup)
-                        : replacementString;
-                }
 
                 return (m, num) =>
                 {
@@ -467,7 +467,7 @@ namespace UAParser
                             if (position <= groups.Count && (group = groups[position]).Success)
                                 replacementText = group.Value;
 
-                            finalString = ReplaceFunction(finalString, replacementText);
+                            finalString = ReplaceFunction(finalString, replacementText, token);
                         }
                     }
                     return finalString;
@@ -484,13 +484,6 @@ namespace UAParser
             {
                 if (replacement == null)
                     return Select();
-
-                Func<string, string, string, string> replaceFunction = (replacementString, matchedGroup, token) =>
-                {
-                    return matchedGroup != null
-                        ? replacementString.ReplaceFirstOccurence(token, matchedGroup)
-                        : replacementString;
-                };
 
                 return (m, num) =>
                 {
@@ -509,7 +502,7 @@ namespace UAParser
                                 if (tokenNumber <= groups.Count && (group = groups[tokenNumber]).Success)
                                     replacementText = group.Value;
 
-                                finalString = replaceFunction(finalString, replacementText, token);
+                                finalString = ReplaceFunction(finalString, replacementText, token);
                             }
                             if (!finalString.Contains("$"))
                                 break;
